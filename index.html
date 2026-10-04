@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>doTERRA India - Official 65+ Products Directory</title>
+    <title>doTERRA India - Stable Auto-Sync Directory</title>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
     <style>
         :root {
             --primary: #2c5e3b;
@@ -15,303 +19,68 @@
             --edit: #2b6cb0;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: var(--secondary);
-            color: var(--text);
-            line-height: 1.6;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background-color: var(--secondary); color: var(--text); line-height: 1.6; }
+        
         header {
             background: linear-gradient(135deg, var(--primary), #1a3823);
-            color: white;
-            padding: 2.5rem 1rem;
-            text-align: center;
-            position: relative;
+            color: white; padding: 2.5rem 1rem; text-align: center; position: relative;
         }
-
-        header h1 {
-            font-size: 2.2rem;
-            margin-bottom: 0.5rem;
-        }
-
-        header p {
-            font-size: 1rem;
-            opacity: 0.9;
-        }
-
+        header h1 { font-size: 2.2rem; margin-bottom: 0.5rem; }
+        
         .admin-btn, .add-btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid white;
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background 0.3s;
-            position: absolute;
-            top: 20px;
+            background: rgba(255, 255, 255, 0.2); border: 1px solid white; color: white;
+            padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; font-weight: 600;
+            position: absolute; top: 20px;
         }
-
         .admin-btn { right: 20px; }
-        .add-btn { right: 180px; display: none; }
+        .add-btn { right: 150px; display: none; }
+        .admin-btn:hover, .add-btn:hover { background: white; color: var(--primary); }
 
-        .admin-btn:hover, .add-btn:hover {
-            background: white;
-            color: var(--primary);
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
-
-        .search-box {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 1.5rem;
-        }
-
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        
+        .search-box { display: flex; justify-content: center; margin-bottom: 1.5rem; }
         .search-box input {
-            width: 100%;
-            max-width: 500px;
-            padding: 0.8rem 1.2rem;
-            font-size: 1rem;
-            border: 2px solid #ddd;
-            border-radius: 30px;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-
-        .search-box input:focus {
-            border-color: var(--primary);
-        }
-
-        /* Modal Styling */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.6);
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            width: 100%;
-            max-width: 450px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-            position: relative;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-content h2 {
-            margin-bottom: 1.2rem;
-            color: var(--primary);
-        }
-
-        .form-group {
-            margin-bottom: 1.2rem;
-        }
-
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            font-size: 0.9rem;
-            margin-bottom: 0.4rem;
-        }
-
-        .form-group input, .form-group textarea, .form-group select {
-            width: 100%;
-            padding: 0.7rem;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 0.95rem;
-        }
-
-        .btn-submit {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 0.8rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            width: 100%;
-            font-size: 1rem;
-        }
-
-        .btn-submit:hover { background: #1a3823; }
-
-        .close-modal {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #888;
-        }
-
-        .products-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .product-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-            display: flex;
-            flex-direction: column;
-            transition: transform 0.3s;
-        }
-
-        .product-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-        }
-
-        .product-image-container {
-            width: 100%;
-            height: 220px;
-            background: #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-            border-bottom: 1px solid #eee;
-        }
-
-        .product-image-container img {
-            max-height: 100%;
-            max-width: 100%;
-            object-fit: contain;
-            transition: transform 0.3s;
-        }
-
-        .product-card:hover .product-image-container img {
-            transform: scale(1.06);
-        }
-
-        .product-header {
-            background-color: var(--primary);
-            color: white;
-            padding: 1rem 1.2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .product-header h3 {
-            font-size: 1.1rem;
-        }
-
-        .badge {
-            font-size: 0.7rem;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 0.2rem 0.5rem;
-            border-radius: 10px;
-        }
-
-        .product-body {
-            padding: 1.2rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.8rem;
-            flex-grow: 1;
-        }
-
-        .section-title {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 0.1rem;
-        }
-
-        .product-body p {
-            font-size: 0.9rem;
-            color: #555;
-        }
-
-        .admin-actions {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 0.8rem;
-        }
-
-        .btn-edit {
-            background: var(--edit);
-            color: white;
-            border: none;
-            padding: 0.4rem;
-            border-radius: 4px;
-            cursor: pointer;
-            flex: 1;
-            font-size: 0.85rem;
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-            border: none;
-            padding: 0.4rem;
-            border-radius: 4px;
-            cursor: pointer;
-            flex: 1;
-            font-size: 0.85rem;
+            width: 100%; max-width: 500px; padding: 0.8rem 1.2rem; font-size: 1rem;
+            border: 2px solid #ddd; border-radius: 30px; outline: none;
         }
 
         .categories {
-            display: flex;
-            justify-content: center;
-            gap: 0.8rem;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
+            display: flex; justify-content: center; gap: 0.8rem; margin-bottom: 2rem; flex-wrap: wrap;
         }
-
         .cat-btn {
-            background: #e2e8f0;
-            border: none;
-            padding: 0.5rem 1.2rem;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: 600;
-            color: #4a5568;
-            transition: all 0.3s;
+            background: #e2e8f0; border: none; padding: 0.5rem 1.2rem; border-radius: 20px;
+            cursor: pointer; font-weight: 600; color: #4a5568; transition: all 0.3s;
         }
+        .cat-btn.active, .cat-btn:hover { background: var(--primary); color: white; }
 
-        .cat-btn.active, .cat-btn:hover {
-            background: var(--primary);
-            color: white;
-        }
-
-        footer {
-            text-align: center;
-            padding: 2rem;
-            background-color: #222;
-            color: white;
-            margin-top: 3rem;
-            font-size: 0.9rem;
-        }
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+        .product-card { background: var(--card-bg); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+        
+        .product-image-container { width: 100%; height: 220px; background: #fff; display: flex; align-items: center; justify-content: center; padding: 1rem; border-bottom: 1px solid #eee; }
+        .product-image-container img { max-height: 100%; max-width: 100%; object-fit: contain; }
+        
+        .product-header { background-color: var(--primary); color: white; padding: 1rem 1.2rem; display: flex; justify-content: space-between; align-items: center; }
+        .badge { font-size: 0.7rem; background: rgba(255,255,255,0.2); padding: 0.2rem 0.5rem; border-radius: 10px; }
+        
+        .product-body { padding: 1.2rem; display: flex; flex-direction: column; gap: 0.8rem; flex-grow: 1; }
+        .section-title { font-size: 0.75rem; font-weight: 700; color: var(--primary); text-transform: uppercase; }
+        .product-body p { font-size: 0.9rem; color: #555; }
+        
+        .admin-actions { display: flex; gap: 0.5rem; margin-top: 0.8rem; }
+        .btn-edit { background: var(--edit); color: white; border: none; padding: 0.4rem; border-radius: 4px; cursor: pointer; flex: 1; }
+        .btn-danger { background: var(--danger); color: white; border: none; padding: 0.4rem; border-radius: 4px; cursor: pointer; flex: 1; }
+        
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 2rem; border-radius: 12px; width: 100%; max-width: 450px; position: relative; max-height: 90vh; overflow-y: auto; }
+        .modal-content h2 { color: var(--primary); margin-bottom: 1rem; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.3rem; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.6rem; border: 1px solid #ddd; border-radius: 6px; }
+        .btn-submit { background: var(--primary); color: white; border: none; padding: 0.8rem; border-radius: 6px; cursor: pointer; width: 100%; font-weight: 600; }
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; cursor: pointer; color: #888; }
+        
+        .loader { text-align: center; padding: 2rem; font-size: 1.2rem; font-weight: bold; color: var(--primary); }
     </style>
 </head>
 <body>
@@ -319,33 +88,33 @@
     <header>
         <button id="addBtn" class="add-btn" onclick="openAddModal()">+ Add Product</button>
         <button class="admin-btn" onclick="openAdminLogin()">Admin Panel</button>
-        <h1>doTERRA India Products</h1>
-        <p>Complete Catalog (75+ Products) with Admin Management</p>
+        <h1>doTERRA India</h1>
+        <p>Complete 75+ Products Live Auto-Syncing Directory</p>
     </header>
 
     <div class="container">
         <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Search across 75+ Indian products, uses, or benefits..." onkeyup="filterProducts()">
+            <input type="text" id="searchInput" placeholder="Search across all 75+ products, uses, or benefits..." onkeyup="filterProducts()">
         </div>
 
         <div class="categories">
             <button class="cat-btn active" onclick="filterCat('all', this)">All Products</button>
-            <button class="cat-btn" onclick="filterCat('s', this)">Single Oils</button>
-            <button class="cat-btn" onclick="filterCat('b', this)">Blends</button>
-            <button class="cat-btn" onclick="filterCat('w', this)">Wellness & Spa</button>
+            <button class="cat-btn" onclick="filterCat('Single', this)">Single Oils</button>
+            <button class="cat-btn" onclick="filterCat('Blend', this)">Blends</button>
+            <button class="cat-btn" onclick="filterCat('Wellness', this)">Wellness & Spa</button>
         </div>
 
+        <div id="loader" class="loader">Loading products...</div>
         <div class="products-grid" id="productContainer"></div>
     </div>
 
-    <!-- Login Modal -->
+    <!-- Admin Login -->
     <div id="loginModal" class="modal">
         <div class="modal-content">
             <span class="close-modal" onclick="closeModals()">&times;</span>
             <h2>Admin Authentication</h2>
             <div class="form-group">
                 <label>Password</label>
-                <!-- No Hint Provided -->
                 <input type="password" id="adminPassword" placeholder="Enter secure password">
             </div>
             <button class="btn-submit" onclick="verifyLogin()">Login</button>
@@ -360,153 +129,191 @@
             <input type="hidden" id="editId">
             <div class="form-group">
                 <label>Product Name</label>
-                <input type="text" id="manageTitle" placeholder="e.g. Tulsi Oil">
+                <input type="text" id="manageTitle">
             </div>
             <div class="form-group">
                 <label>Category</label>
                 <select id="manageCat">
-                    <option value="s">Single Oil</option>
-                    <option value="b">Blend</option>
-                    <option value="w">Wellness & Spa</option>
+                    <option value="Single">Single</option>
+                    <option value="Blend">Blend</option>
+                    <option value="Wellness">Wellness</option>
                 </select>
             </div>
             <div class="form-group">
                 <label>Uses</label>
-                <textarea id="manageUses" placeholder="Write uses..."></textarea>
+                <textarea id="manageUses"></textarea>
             </div>
             <div class="form-group">
                 <label>Benefits</label>
-                <textarea id="manageBenefits" placeholder="Write benefits..."></textarea>
+                <textarea id="manageBenefits"></textarea>
             </div>
             <div class="form-group">
-                <label>Custom Image URL (Edit Photo)</label>
+                <label>Custom Image URL</label>
                 <input type="text" id="manageImage" placeholder="Leave blank to auto-fetch image">
             </div>
-            <button class="btn-submit" onclick="saveProduct()">Save Product</button>
+            <button class="btn-submit" onclick="saveProduct()">Sync to All Devices</button>
         </div>
     </div>
 
-    <footer>
-        <p>&copy; 2026 doTERRA India Catalog. Securely Managed.</p>
-    </footer>
-
     <script>
-        // Full expanded list of 75 products available or commonly referenced in doTERRA India
-        const indiaProducts = [
-            // --- SINGLES (40+) ---
-            { id: 1, n: "Tulsi (Holy Basil)", c: "s", u: "Diffuse or apply topically to wrists and back of neck.", b: "Promotes a calming atmosphere and healthy skin." },
-            { id: 2, n: "Indian Lemongrass", c: "s", u: "Massage onto muscles post-workout or diffuse.", b: "Provides purifying aroma and supports healthy digestion." },
-            { id: 3, n: "Turmeric", c: "s", u: "Take internally for cellular support or apply topically.", b: "Provides antioxidant support and promotes healthy immune response." },
-            { id: 4, n: "Peppermint", c: "s", u: "Inhale directly for alertness or dilute on temples.", b: "Supports clear breathing and cools muscles." },
-            { id: 5, n: "Lavender", c: "s", u: "Diffuse at night or apply topically to wrists.", b: "Promotes restful sleep and calms minor skin irritations." },
-            { id: 6, n: "Lemon", c: "s", u: "Add to water or use for surface cleansing.", b: "Cleanses toxins naturally and purifies the air." },
-            { id: 7, n: "Frankincense", c: "s", u: "Apply to bottoms of feet or diffuse during meditation.", b: "Supports cellular function and brings deep peace." },
-            { id: 8, n: "Tea Tree", c: "s", u: "Apply directly to skin blemishes or add to shampoo.", b: "Renowned for cleansing properties on skin and scalp." },
-            { id: 9, n: "Oregano", c: "s", u: "Dilute heavily for skin or take internally.", b: "Powerful cleansing agent and supports immune defenses." },
-            { id: 10, n: "Wild Orange", c: "s", u: "Diffuse to uplift atmosphere.", b: "Energizes the mind, uplifts mood, and cleanses surfaces." },
-            { id: 11, n: "Eucalyptus", c: "s", u: "Add to shower floor for a refreshing steam experience.", b: "Promotes easy breathing and clears airways." },
-            { id: 12, n: "Copaiba", c: "s", u: "Take under tongue or mix with moisturizer.", b: "Supports nervous system and calms anxious feelings." },
-            { id: 13, n: "Wintergreen", c: "s", u: "Massage diluted onto back and joints.", b: "Provides warming comfort and soothing relief to muscles." },
-            { id: 14, n: "Cedarwood", c: "s", u: "Diffuse during meditation.", b: "Promotes relaxing atmosphere and healthy skin tone." },
-            { id: 15, n: "Fennel", c: "s", u: "Take in water to curb sugar cravings.", b: "Supports healthy metabolism and digestion." },
-            { id: 16, n: "Vetiver", c: "s", u: "Apply to back of neck or diffuse.", b: "Calming, grounding aroma that helps soothe restlessness." },
-            { id: 17, n: "Lime", c: "s", u: "Diffuse to cleanse the air.", b: "Supports emotional balance and purifies air." },
-            { id: 18, n: "Tangerine", c: "s", u: "Add to water for flavor or diffuse.", b: "Uplifts mood and supports healthy immune function." },
-            { id: 19, n: "Ylang Ylang", c: "s", u: "Massage into hair for luster or diffuse.", b: "Lessen tension and supports healthy skin and hair radiance." },
-            { id: 20, n: "Juniper Berry", c: "s", u: "Diffuse for cleansing aroma.", b: "Acts as a natural skin toner and supports kidney health." },
-            { id: 21, n: "Spearmint", c: "s", u: "Diffuse for fresh breath or apply to toothbrush.", b: "Promotes digestion and helps reduce occasional stomach upset." },
-            { id: 22, n: "Helichrysum", c: "s", u: "Apply to face to reduce wrinkles.", b: "Rejuvenates skin and promotes a glowing complexion." },
-            { id: 23, n: "Coriander", c: "s", u: "Apply to oily skin areas.", b: "Promotes digestion and supports clear complexion." },
-            { id: 24, n: "Geranium", c: "s", u: "Use in steam facial.", b: "Promotes clear, healthy skin and healthy hair." },
-            { id: 25, n: "Petitgrain", c: "s", u: "Take internally to ease tension.", b: "Supports cardiovascular, immune, and nervous systems." },
-            { id: 26, n: "Patchouli", c: "s", u: "Apply to face to reduce blemishes.", b: "Grounding aroma and promotes smooth, glowing skin." },
-            { id: 27, n: "Bergamot", c: "s", u: "Diffuse in office to uplift mood.", b: "Calms and uplifts mood simultaneously." },
-            { id: 28, n: "Thyme", c: "s", u: "Take internally for immunity support.", b: "Provides powerful cleansing and purifying properties." },
-            { id: 29, n: "Marjoram", c: "s", u: "Apply to back of neck to lessen stress.", b: "Valued for its calming properties on the nervous system." },
-            { id: 30, n: "Rosemary", c: "s", u: "Massage into scalp.", b: "Supports mental focus and promotes abundant hair growth." },
-            { id: 31, n: "Myrrh", c: "s", u: "Add to toothpaste for oral health.", b: "Powerful cleansing properties, especially for mouth and throat." },
-            { id: 32, n: "Clove", c: "s", u: "Apply diluted to teeth/gums.", b: "Powerful antioxidant properties and supports oral hygiene." },
-            { id: 33, n: "Sandalwood", c: "s", u: "Apply to skin to reduce appearance of imperfections.", b: "Enhances skin health and grounds emotional well-being." },
-            { id: 34, n: "Siberian Fir", c: "s", u: "Apply topically to soothe skin.", b: "Calms anxious feelings and supports easy breathing." },
-            { id: 35, n: "Cinnamon Bark", c: "s", u: "Dilute heavily and apply for warming massage.", b: "Supports metabolic health and immune function." },
-            { id: 36, n: "Basil", c: "s", u: "Diffuse while studying or working.", b: "Promotes mental alertness and eases occasional tension." },
-            { id: 37, n: "Cypress", c: "s", u: "Apply to legs before workout.", b: "Promotes healthy circulation and vitality." },
-            { id: 38, n: "Grapefruit", c: "s", u: "Add to facial toner.", b: "Improves appearance of blemishes and energizes mood." },
-            { id: 39, n: "Ginger", c: "s", u: "Massage over lower abdomen.", b: "Supports overall digestive health and eases nausea." },
-            { id: 40, n: "Lemon Eucalyptus", c: "s", u: "Diffuse indoors for a fresh environment.", b: "Cleansing to the skin and purifying to the air." },
-            { id: 41, n: "Cassia", c: "s", u: "Diffuse during cold winter months.", b: "Promotes healthy digestion and immune function." },
-            { id: 42, n: "Citronella", c: "s", u: "Diffuse outdoors or apply to skin.", b: "Acts as a natural pest repellent and cleanses surfaces." },
-            { id: 43, n: "Celery Seed", c: "s", u: "Take in a veggie capsule.", b: "Supports healthy digestion and urinary tract." },
-            { id: 44, n: "Clary Sage", c: "s", u: "Apply to abdomen during menstrual cycle.", b: "Promotes healthy hormonal balance and restful sleep." },
-            { id: 45, n: "Green Mandarin", c: "s", u: "Take internally to support immunity.", b: "Supports healthy nervous, digestive, and respiratory systems." },
+        // ==========================================
+        // APNI FIREBASE CONFIG YAHAN SET HAI
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyD04Se60-INZngr0GdSDwE9RbbzISX-mdw",
+            authDomain: "dootera-india.firebaseapp.com",
+            projectId: "dootera-india",
+            storageBucket: "dootera-india.firebasestorage.app",
+            messagingSenderId: "346397573345",
+            appId: "1:346397573345:web:7840dd8ffa5eb6c7cb7a0",
+            measurementId: "G-4CX2ZC4ZWQ"
+        };
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+        // ==========================================
 
-            // --- BLENDS (20+) ---
-            { id: 46, n: "On Guard", c: "b", u: "Diffuse to cleanse air or apply to soles of feet.", b: "Supports healthy immune function against environmental threats." },
-            { id: 47, n: "Air Repair (Breathe)", c: "b", u: "Apply topically to chest or diffuse at night.", b: "Maintains clear airways and minimizes effects of seasonal threats." },
-            { id: 48, n: "Deep Blue", c: "b", u: "Massage topically onto hands, lower back, and joints.", b: "Provides immediate cooling and soothing relief to sore muscles." },
-            { id: 49, n: "DigestZen", c: "b", u: "Massage onto abdomen or take in water.", b: "Aids in smooth digestion and eases stomach upset." },
-            { id: 50, n: "Balance", c: "b", u: "Apply to wrists or back of neck during workdays.", b: "Creates a sense of calmness, grounding, and emotional equilibrium." },
-            { id: 51, n: "Serenity", c: "b", u: "Diffuse at bedtime to encourage tranquility.", b: "Lessens tension, calms emotions, and supports restful sleep." },
-            { id: 52, n: "Citrus Bliss", c: "b", u: "Diffuse for a refreshing aroma.", b: "Reduces stress, uplifts mood, and cleanses skin." },
-            { id: 53, n: "Elevation", c: "b", u: "Diffuse to elevate mood or apply to pulse points.", b: "Elevates mood, promotes high spirits, and increases vitality." },
-            { id: 54, n: "PastTense", c: "b", u: "Roll on temples, neck, and shoulders.", b: "Quickly eases head and neck tension, providing relaxation." },
-            { id: 55, n: "Purify", c: "b", u: "Diffuse to eliminate odors or add to laundry.", b: "Refreshes air and protects against environmental odors." },
-            { id: 56, n: "AromaTouch", c: "b", u: "Use in massage for a spa-like experience.", b: "Comforting and relaxing effects on muscles and joints." },
-            { id: 57, n: "ClaryCalm", c: "b", u: "Roll on abdomen for a cooling massage.", b: "Provides a soothing and calming effect during a woman’s menstrual cycle." },
-            { id: 58, n: "InTune", c: "b", u: "Apply to temples and back of neck when studying.", b: "Enhances and sustains a sense of focus." },
-            { id: 59, n: "Adaptiv", c: "b", u: "Apply to pulse points to center yourself.", b: "Helps improve sustained attention while easing body and mind." },
-            { id: 60, n: "Cheer", c: "b", u: "Apply to heart or wrists for a boost.", b: "Provides a cheerful, uplifting aroma to brighten your day." },
-            { id: 61, n: "Console", c: "b", u: "Diffuse during times of loss or grief.", b: "Promotes comforting emotional moments and hope." },
-            { id: 62, n: "Forgive", c: "b", u: "Apply to heart during reflection time.", b: "Helps discover the liberating action of forgiving." },
-            { id: 63, n: "Motivate", c: "b", u: "Diffuse when working on a project.", b: "Unleashes creative powers and counters negative emotions." },
-            { id: 64, n: "Passion", c: "b", u: "Apply to pulse points throughout the day.", b: "Ignites feelings of excitement, passion, and joy." },
-            { id: 65, n: "Peace", c: "b", u: "Diffuse at night or rub on tense shoulders.", b: "Promotes feelings of peace, reassurance, and contentment." },
-            { id: 66, n: "HD Clear", c: "b", u: "Apply to smooth out skin imperfections.", b: "Promotes a clear, smooth complexion." },
-            { id: 67, n: "Immortelle", c: "b", u: "Apply a thin layer to face and neck.", b: "Helps reduce the appearance of fine lines and wrinkles." },
-            { id: 68, n: "TerraShield", c: "b", u: "Apply to legs, arms, and neck outdoors.", b: "Acts as an effective, natural outdoor barrier." },
-            { id: 69, n: "Zendocrine", c: "b", u: "Take in water to kick-start a cleanse.", b: "Supports the body’s natural ability to rid itself of unwanted substances." },
+        // Fallback 75+ Indian doTERRA Products List (Guarantees instant display)
+        const fallbackProducts = [
+            { id: "1", name: "Tulsi (Holy Basil)", category: "Single", uses: "Diffuse or apply topically to wrists and back of neck.", benefits: "Promotes a calming atmosphere and healthy skin." },
+            { id: "2", name: "Indian Lemongrass", category: "Single", uses: "Massage onto muscles post-workout or diffuse.", benefits: "Provides purifying aroma and supports healthy digestion." },
+            { id: "3", name: "Turmeric", category: "Single", uses: "Take internally for cellular support or apply topically.", benefits: "Provides antioxidant support and promotes healthy immune response." },
+            { id: "4", name: "Peppermint", category: "Single", uses: "Inhale directly for alertness or dilute on temples.", benefits: "Supports clear breathing and cools muscles." },
+            { id: "5", name: "Lavender", category: "Single", uses: "Diffuse at night or apply topically to wrists.", benefits: "Promotes restful sleep and calms minor skin irritations." },
+            { id: "6", name: "Lemon", category: "Single", uses: "Add to water or use for surface cleansing.", benefits: "Cleanses toxins naturally and purifies the air." },
+            { id: "7", name: "Frankincense", category: "Single", uses: "Apply to bottoms of feet or diffuse during meditation.", benefits: "Supports cellular function and brings deep peace." },
+            { id: "8", name: "Tea Tree", category: "Single", uses: "Apply directly to skin blemishes or add to shampoo.", benefits: "Renowned for cleansing properties on skin and scalp." },
+            { id: "9", name: "Oregano", category: "Single", uses: "Dilute heavily for skin or take internally.", benefits: "Powerful cleansing agent and supports immune defenses." },
+            { id: "10", name: "Wild Orange", category: "Single", uses: "Diffuse to uplift atmosphere.", benefits: "Energizes the mind, uplifts mood, and cleanses surfaces." },
+            { id: "11", name: "Eucalyptus", category: "Single", uses: "Add to shower floor for a refreshing steam experience.", benefits: "Promotes easy breathing and clears airways." },
+            { id: "12", name: "Copaiba", category: "Single", uses: "Take under tongue or mix with moisturizer.", benefits: "Supports nervous system and calms anxious feelings." },
+            { id: "13", name: "Wintergreen", category: "Single", uses: "Massage diluted onto back and joints.", benefits: "Provides warming comfort and soothing relief to muscles." },
+            { id: "14", name: "Cedarwood", category: "Single", uses: "Diffuse during meditation.", benefits: "Promotes relaxing atmosphere and healthy skin tone." },
+            { id: "15", name: "Fennel", category: "Single", uses: "Take in water to curb sugar cravings.", benefits: "Supports healthy metabolism and digestion." },
+            { id: "16", name: "Vetiver", category: "Single", uses: "Apply to back of neck or diffuse.", benefits: "Calming, grounding aroma that helps soothe restlessness." },
+            { id: "17", name: "Lime", category: "Single", uses: "Diffuse to cleanse the air.", benefits: "Supports emotional balance and purifies air." },
+            { id: "18", name: "Tangerine", category: "Single", uses: "Add to water for flavor or diffuse.", benefits: "Uplifts mood and supports healthy immune function." },
+            { id: "19", name: "Ylang Ylang", category: "Single", uses: "Massage into hair for luster or diffuse.", benefits: "Lessen tension and supports healthy skin and hair radiance." },
+            { id: "20", name: "Juniper Berry", category: "Single", uses: "Diffuse for cleansing aroma.", benefits: "Acts as a natural skin toner and supports kidney health." },
+            { id: "21", name: "Spearmint", category: "Single", uses: "Diffuse for fresh breath or apply to toothbrush.", benefits: "Promotes digestion and helps reduce occasional stomach upset." },
+            { id: "22", name: "Helichrysum", category: "Single", uses: "Apply to face to reduce wrinkles.", benefits: "Rejuvenates skin and promotes a glowing complexion." },
+            { id: "23", name: "Coriander", category: "Single", uses: "Apply to oily skin areas.", benefits: "Promotes digestion and supports clear complexion." },
+            { id: "24", name: "Geranium", category: "Single", uses: "Use in steam facial.", benefits: "Promotes clear, healthy skin and healthy hair." },
+            { id: "25", name: "Petitgrain", category: "Single", uses: "Take internally to ease tension.", benefits: "Supports cardiovascular, immune, and nervous systems." },
+            { id: "26", name: "Patchouli", category: "Single", uses: "Apply to face to reduce blemishes.", benefits: "Grounding aroma and promotes smooth, glowing skin." },
+            { id: "27", name: "Bergamot", category: "Single", uses: "Diffuse in office to uplift mood.", benefits: "Calms and uplifts mood simultaneously." },
+            { id: "28", name: "Thyme", category: "Single", uses: "Take internally for immunity support.", benefits: "Provides powerful cleansing and purifying properties." },
+            { id: "29", name: "Marjoram", category: "Single", uses: "Apply to back of neck to lessen stress.", benefits: "Valued for its calming properties on the nervous system." },
+            { id: "30", name: "Rosemary", category: "Single", uses: "Massage into scalp.", benefits: "Supports mental focus and promotes abundant hair growth." },
+            { id: "31", name: "Myrrh", category: "Single", uses: "Add to toothpaste for oral health.", benefits: "Powerful cleansing properties, especially for mouth and throat." },
+            { id: "32", name: "Clove", category: "Single", uses: "Apply diluted to teeth/gums.", benefits: "Powerful antioxidant properties and supports oral hygiene." },
+            { id: "33", name: "Sandalwood", category: "Single", uses: "Apply to skin to reduce appearance of imperfections.", benefits: "Enhances skin health and grounds emotional well-being." },
+            { id: "34", name: "Siberian Fir", category: "Single", uses: "Apply topically to soothe skin.", benefits: "Calms anxious feelings and supports easy breathing." },
+            { id: "35", name: "Cinnamon Bark", category: "Single", uses: "Dilute heavily and apply for warming massage.", benefits: "Supports metabolic health and immune function." },
+            { id: "36", name: "Basil", category: "Single", uses: "Diffuse while studying or working.", benefits: "Promotes mental alertness and eases occasional tension." },
+            { id: "37", name: "Cypress", category: "Single", uses: "Apply to legs before workout.", benefits: "Promotes healthy circulation and vitality." },
+            { id: "38", name: "Grapefruit", category: "Single", uses: "Add to facial toner.", benefits: "Improves appearance of blemishes and energizes mood." },
+            { id: "39", name: "Ginger", category: "Single", uses: "Massage over lower abdomen.", benefits: "Supports overall digestive health and eases nausea." },
+            { id: "40", name: "Lemon Eucalyptus", category: "Single", uses: "Diffuse indoors for a fresh environment.", benefits: "Cleansing to the skin and purifying to the air." },
+            { id: "41", name: "Cassia", category: "Single", uses: "Diffuse during cold winter months.", benefits: "Promotes healthy digestion and immune function." },
+            { id: "42", name: "Citronella", category: "Single", uses: "Diffuse outdoors or apply to skin.", benefits: "Acts as a natural pest repellent and cleanses surfaces." },
+            { id: "43", name: "Celery Seed", category: "Single", uses: "Take in a veggie capsule.", benefits: "Supports healthy digestion and urinary tract." },
+            { id: "44", name: "Clary Sage", category: "Single", uses: "Apply to abdomen during menstrual cycle.", benefits: "Promotes healthy hormonal balance and restful sleep." },
+            { id: "45", name: "Green Mandarin", category: "Single", uses: "Take internally to support immunity.", benefits: "Supports healthy nervous, digestive, and respiratory systems." },
+            
+            // Blends
+            { id: "46", name: "On Guard", category: "Blend", uses: "Diffuse to cleanse air or apply to soles of feet.", benefits: "Supports healthy immune function against environmental threats." },
+            { id: "47", name: "Air Repair (Breathe)", category: "Blend", uses: "Apply topically to chest or diffuse at night.", benefits: "Maintains clear airways and minimizes effects of seasonal threats." },
+            { id: "48", name: "Deep Blue", category: "Blend", uses: "Massage topically onto hands, lower back, and joints.", benefits: "Provides immediate cooling and soothing relief to sore muscles." },
+            { id: "49", name: "DigestZen", category: "Blend", uses: "Massage onto abdomen or take in water.", benefits: "Aids in smooth digestion and eases stomach upset." },
+            { id: "50", name: "Balance", category: "Blend", uses: "Apply to wrists or back of neck during workdays.", benefits: "Creates a sense of calmness, grounding, and emotional equilibrium." },
+            { id: "51", name: "Serenity", category: "Blend", uses: "Diffuse at bedtime to encourage tranquility.", benefits: "Lessens tension, calms emotions, and supports restful sleep." },
+            { id: "52", name: "Citrus Bliss", category: "Blend", uses: "Diffuse for a refreshing aroma.", benefits: "Reduces stress, uplifts mood, and cleanses skin." },
+            { id: "53", name: "Elevation", category: "Blend", uses: "Diffuse to elevate mood or apply to pulse points.", benefits: "Elevates mood, promotes high spirits, and increases vitality." },
+            { id: "54", name: "PastTense", category: "Blend", uses: "Roll on temples, neck, and shoulders.", benefits: "Quickly eases head and neck tension, providing relaxation." },
+            { id: "55", name: "Purify", category: "Blend", uses: "Diffuse to eliminate odors or add to laundry.", benefits: "Refreshes air and protects against environmental odors." },
+            { id: "56", name: "AromaTouch", category: "Blend", uses: "Use in massage for a spa-like experience.", benefits: "Comforting and relaxing effects on muscles and joints." },
+            { id: "57", name: "ClaryCalm", category: "Blend", uses: "Roll on abdomen for a cooling massage.", benefits: "Provides a soothing and calming effect during a woman’s menstrual cycle." },
+            { id: "58", name: "InTune", category: "Blend", uses: "Apply to temples and back of neck when studying.", benefits: "Enhances and sustains a sense of focus." },
+            { id: "59", name: "Adaptiv", category: "Blend", uses: "Apply to pulse points to center yourself.", benefits: "Helps improve sustained attention while easing body and mind." },
+            { id: "60", name: "Cheer", category: "Blend", uses: "Apply to heart or wrists for a boost.", benefits: "Provides a cheerful, uplifting aroma to brighten your day." },
+            { id: "61", name: "Console", category: "Blend", uses: "Diffuse during times of loss or grief.", benefits: "Promotes comforting emotional moments and hope." },
+            { id: "62", name: "Forgive", category: "Blend", uses: "Apply to heart during reflection time.", benefits: "Helps discover the liberating action of forgiving." },
+            { id: "63", name: "Motivate", category: "Blend", uses: "Diffuse when working on a project.", benefits: "Unleashes creative powers and counters negative emotions." },
+            { id: "64", name: "Passion", category: "Blend", uses: "Apply to pulse points throughout the day.", benefits: "Ignites feelings of excitement, passion, and joy." },
+            { id: "65", name: "Peace", category: "Blend", uses: "Diffuse at night or rub on tense shoulders.", benefits: "Promotes feelings of peace, reassurance, and contentment." },
+            { id: "66", name: "HD Clear", category: "Blend", uses: "Apply to smooth out skin imperfections.", benefits: "Promotes a clear, smooth complexion." },
+            { id: "67", name: "Immortelle", category: "Blend", uses: "Apply a thin layer to face and neck.", benefits: "Helps reduce the appearance of fine lines and wrinkles." },
+            { id: "68", name: "TerraShield", category: "Blend", uses: "Apply to legs, arms, and neck outdoors.", benefits: "Acts as an effective, natural outdoor barrier." },
+            { id: "69", name: "Zendocrine", category: "Blend", uses: "Take in water to kick-start a cleanse.", benefits: "Supports the body’s natural ability to rid itself of unwanted substances." },
 
-            // --- WELLNESS / SPA (6+) ---
-            { id: 70, n: "VMG+", c: "w", u: "Use daily as a dietary supplement.", b: "Fills nutritional gaps to support overall wellness in Indian lifestyles." },
-            { id: 71, n: "Deep Blue Rub", c: "w", u: "Rub directly onto targeted muscle areas.", b: "Delivers targeted cooling and warming comfort to muscles." },
-            { id: 72, n: "PB Assist+", c: "w", u: "Take one capsule daily with food.", b: "Supports healthy digestive tract microbiome and immunity." },
-            { id: 73, n: "TerraZyme", c: "w", u: "Take 1-3 capsules with meals.", b: "Supports enzyme production and nutrient uptake." },
-            { id: 74, n: "Correct-X", c: "w", u: "Apply to affected skin areas.", b: "Multi-purpose natural ointment that soothes distressed skin." },
-            { id: 75, n: "On Guard Toothpaste", c: "w", u: "Brush teeth morning and night.", b: "Cleans teeth naturally and leaves breath cinnamon-fresh." }
+            // Wellness & Spa
+            { id: "70", name: "VMG+", category: "Wellness", uses: "Use daily as a dietary supplement.", benefits: "Fills nutritional gaps to support overall wellness in Indian lifestyles." },
+            { id: "71", name: "Deep Blue Rub", category: "Wellness", uses: "Rub directly onto targeted muscle areas.", benefits: "Delivers targeted cooling and warming comfort to muscles." },
+            { id: "72", name: "PB Assist+", category: "Wellness", uses: "Take one capsule daily with food.", benefits: "Supports healthy digestive tract microbiome and immunity." },
+            { id: "73", name: "TerraZyme", category: "Wellness", uses: "Take 1-3 capsules with meals.", benefits: "Supports enzyme production and nutrient uptake." },
+            { id: "74", name: "Correct-X", category: "Wellness", uses: "Apply to affected skin areas.", benefits: "Multi-purpose natural ointment that soothes distressed skin." },
+            { id: "75", name: "On Guard Toothpaste", category: "Wellness", uses: "Brush teeth morning and night.", benefits: "Cleans teeth naturally and leaves breath cinnamon-fresh." }
         ];
 
-        let productsData = JSON.parse(localStorage.getItem('doterra_india_75_products')) || indiaProducts;
+        let productsData = [];
         let isAdminLoggedIn = false;
+
+        // SMART REAL-TIME SYNC (Uses Firestore if available, otherwise seamlessly falls back to local data)
+        db.collection("doterra_products").onSnapshot((querySnapshot) => {
+            let cloudData = [];
+            querySnapshot.forEach((doc) => {
+                let data = doc.data();
+                data.id = doc.id;
+                cloudData.push(data);
+            });
+
+            // Agar cloud database mein data hai toh wo use karo, nahi toh fallback list dikhao
+            if (cloudData.length > 0) {
+                productsData = cloudData;
+            } else {
+                productsData = fallbackProducts;
+            }
+
+            document.getElementById('loader').style.display = 'none';
+            renderProducts();
+        }, (error) => {
+            // Agar offline ya permission issue ho toh fallback products turant dikha do
+            console.log("Using local fallback products due to network/permission");
+            productsData = fallbackProducts;
+            document.getElementById('loader').style.display = 'none';
+            renderProducts();
+        });
 
         function renderProducts() {
             const container = document.getElementById('productContainer');
             container.innerHTML = '';
 
             productsData.forEach(p => {
-                let searchQuery = encodeURIComponent("doTERRA " + p.n + " oil");
+                let searchQuery = encodeURIComponent("doTERRA " + p.name + " oil bottle");
                 let imgUrl = p.img || "https://tse2.mm.bing.net/th?q=" + searchQuery + "&w=300&h=300&c=7&rs=1&p=0";
-                
-                let catLabel = p.c === 's' ? 'Single' : p.c === 'b' ? 'Blend' : 'Wellness';
                 
                 let adminBtns = isAdminLoggedIn ? `
                     <div class="admin-actions">
-                        <button class="btn-edit" onclick="openEditModal(${p.id})">Edit Photo/Info</button>
-                        <button class="btn-danger" onclick="deleteProduct(${p.id})">Delete</button>
+                        <button class="btn-edit" onclick="openEditModal('${p.id}')">Edit</button>
+                        <button class="btn-danger" onclick="deleteProduct('${p.id}')">Delete</button>
                     </div>
                 ` : '';
 
                 let cardHTML = `
-                    <div class="product-card" data-category="${p.c}">
+                    <div class="product-card" data-category="${p.category}">
                         <div class="product-image-container">
-                            <img src="${imgUrl}" alt="${p.n}" loading="lazy">
+                            <img src="${imgUrl}" alt="${p.name}" loading="lazy">
                         </div>
                         <div class="product-header">
-                            <h3>${p.n}</h3>
-                            <span class="badge">${catLabel}</span>
+                            <h3>${p.name}</h3>
+                            <span class="badge">${p.category}</span>
                         </div>
                         <div class="product-body">
-                            <div><div class="section-title">Uses</div><p>${p.u}</p></div>
-                            <div><div class="section-title">Benefits</div><p>${p.b}</p></div>
+                            <div><div class="section-title">Uses</div><p>${p.uses}</p></div>
+                            <div><div class="section-title">Benefits</div><p>${p.benefits}</p></div>
                             ${adminBtns}
                         </div>
                     </div>
@@ -516,35 +323,27 @@
         }
 
         function openAdminLogin() {
-            if (isAdminLoggedIn) {
-                alert("You are already logged in as Admin.");
-            } else {
-                document.getElementById('adminPassword').value = '';
-                document.getElementById('loginModal').style.display = 'flex';
-            }
+            if (isAdminLoggedIn) { alert("Admin is Active."); } 
+            else { document.getElementById('loginModal').style.display = 'flex'; }
         }
 
         function verifyLogin() {
             let pass = document.getElementById('adminPassword').value;
-            // Strict password check - No Hints provided in the UI
             if (pass === "Unisoasi@1980") {
                 isAdminLoggedIn = true;
                 closeModals();
                 document.querySelector('.admin-btn').innerText = "Admin (Active)";
-                document.querySelector('.admin-btn').style.background = "#fff";
-                document.querySelector('.admin-btn').style.color = "#2c5e3b";
                 document.getElementById('addBtn').style.display = 'inline-block';
                 renderProducts(); 
             } else {
-                alert("Incorrect Password! Access Denied.");
+                alert("Incorrect Password!");
             }
         }
 
         function openAddModal() {
-            document.getElementById('modalTitle').innerText = "Add New Indian Product";
+            document.getElementById('modalTitle').innerText = "Add New Product";
             document.getElementById('editId').value = "";
             document.getElementById('manageTitle').value = "";
-            document.getElementById('manageCat').value = "s";
             document.getElementById('manageUses').value = "";
             document.getElementById('manageBenefits').value = "";
             document.getElementById('manageImage').value = "";
@@ -552,17 +351,15 @@
         }
 
         function openEditModal(id) {
-            let product = productsData.find(p => p.id === id);
-            if(!product) return;
-
-            document.getElementById('modalTitle').innerText = "Edit Product & Photo";
-            document.getElementById('editId').value = product.id;
-            document.getElementById('manageTitle').value = product.n;
-            document.getElementById('manageCat').value = product.c;
-            document.getElementById('manageUses').value = product.u;
-            document.getElementById('manageBenefits').value = product.b;
-            document.getElementById('manageImage').value = product.img || "";
-            
+            let p = productsData.find(prod => prod.id === id);
+            if(!p) return;
+            document.getElementById('modalTitle').innerText = "Edit Product";
+            document.getElementById('editId').value = p.id;
+            document.getElementById('manageTitle').value = p.name;
+            document.getElementById('manageCat').value = p.category;
+            document.getElementById('manageUses').value = p.uses;
+            document.getElementById('manageBenefits').value = p.benefits;
+            document.getElementById('manageImage').value = p.img || "";
             document.getElementById('adminDashboard').style.display = 'flex';
         }
 
@@ -574,43 +371,31 @@
             let benefits = document.getElementById('manageBenefits').value;
             let image = document.getElementById('manageImage').value;
 
-            if (!name || !uses || !benefits) {
-                alert("Please fill out Name, Uses, and Benefits!");
-                return;
-            }
+            if (!name || !uses || !benefits) { alert("Fill all fields!"); return; }
 
-            if(id) {
-                let index = productsData.findIndex(p => p.id == id);
-                if(index !== -1) {
-                    productsData[index].n = name;
-                    productsData[index].c = cat;
-                    productsData[index].u = uses;
-                    productsData[index].b = benefits;
-                    productsData[index].img = image;
-                }
+            let productData = {
+                name: name,
+                category: cat,
+                uses: uses,
+                benefits: benefits,
+                img: image || ""
+            };
+
+            // Agar fallback item hai (jiska id number hai), toh use cloud par naya add karenge
+            if(id && isNaN(id)) {
+                db.collection("doterra_products").doc(id).update(productData);
             } else {
-                let newObj = {
-                    id: Date.now(),
-                    n: name,
-                    c: cat,
-                    u: uses,
-                    b: benefits,
-                    img: image || null
-                };
-                productsData.unshift(newObj);
+                db.collection("doterra_products").add(productData);
             }
-
-            localStorage.setItem('doterra_india_75_products', JSON.stringify(productsData));
             closeModals();
-            renderProducts();
         }
 
         function deleteProduct(id) {
-            if (confirm("Are you sure you want to delete this product?")) {
-                productsData = productsData.filter(p => p.id !== id);
-                localStorage.setItem('doterra_india_75_products', JSON.stringify(productsData));
-                renderProducts();
+            if(!isNaN(id)) {
+                alert("Default fallback items cannot be deleted directly. You can edit them or add new ones!");
+                return;
             }
+            db.collection("doterra_products").doc(id).delete();
         }
 
         function closeModals() {
@@ -621,14 +406,9 @@
         function filterProducts() {
             let input = document.getElementById('searchInput').value.toLowerCase();
             let cards = document.getElementsByClassName('product-card');
-
             for (let i = 0; i < cards.length; i++) {
                 let cardText = cards[i].innerText.toLowerCase();
-                if (cardText.includes(input)) {
-                    cards[i].style.display = "flex";
-                } else {
-                    cards[i].style.display = "none";
-                }
+                cards[i].style.display = cardText.includes(input) ? "flex" : "none";
             }
         }
 
@@ -646,8 +426,6 @@
                 }
             }
         }
-
-        renderProducts();
     </script>
 </body>
 </html>
