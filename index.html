@@ -28,14 +28,16 @@
         }
         header h1 { font-size: 2.2rem; margin-bottom: 0.5rem; }
         
-        .admin-btn, .add-btn {
+        .admin-btn, .add-btn, .push-btn {
             background: rgba(255, 255, 255, 0.2); border: 1px solid white; color: white;
             padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; font-weight: 600;
             position: absolute; top: 20px;
         }
         .admin-btn { right: 20px; }
         .add-btn { right: 150px; display: none; }
+        .push-btn { right: 280px; display: none; background: var(--accent); color: #333; border: none; }
         .admin-btn:hover, .add-btn:hover { background: white; color: var(--primary); }
+        .push-btn:hover { background: #e2b71c; }
 
         .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
         
@@ -86,6 +88,7 @@
 <body>
 
     <header>
+        <button id="pushBtn" class="push-btn" onclick="pushAllToCloud()">☁️ Sync All to Cloud</button>
         <button id="addBtn" class="add-btn" onclick="openAddModal()">+ Add Product</button>
         <button class="admin-btn" onclick="openAdminLogin()">Admin Panel</button>
         <h1>doTERRA India</h1>
@@ -175,93 +178,91 @@
         const db = firebase.firestore();
         // ==========================================
 
-        // Fallback 75+ Indian doTERRA Products List (Guarantees instant display)
         const fallbackProducts = [
-            { id: "1", name: "Tulsi (Holy Basil)", category: "Single", uses: "Diffuse or apply topically to wrists and back of neck.", benefits: "Promotes a calming atmosphere and healthy skin." },
-            { id: "2", name: "Indian Lemongrass", category: "Single", uses: "Massage onto muscles post-workout or diffuse.", benefits: "Provides purifying aroma and supports healthy digestion." },
-            { id: "3", name: "Turmeric", category: "Single", uses: "Take internally for cellular support or apply topically.", benefits: "Provides antioxidant support and promotes healthy immune response." },
-            { id: "4", name: "Peppermint", category: "Single", uses: "Inhale directly for alertness or dilute on temples.", benefits: "Supports clear breathing and cools muscles." },
-            { id: "5", name: "Lavender", category: "Single", uses: "Diffuse at night or apply topically to wrists.", benefits: "Promotes restful sleep and calms minor skin irritations." },
-            { id: "6", name: "Lemon", category: "Single", uses: "Add to water or use for surface cleansing.", benefits: "Cleanses toxins naturally and purifies the air." },
-            { id: "7", name: "Frankincense", category: "Single", uses: "Apply to bottoms of feet or diffuse during meditation.", benefits: "Supports cellular function and brings deep peace." },
-            { id: "8", name: "Tea Tree", category: "Single", uses: "Apply directly to skin blemishes or add to shampoo.", benefits: "Renowned for cleansing properties on skin and scalp." },
-            { id: "9", name: "Oregano", category: "Single", uses: "Dilute heavily for skin or take internally.", benefits: "Powerful cleansing agent and supports immune defenses." },
-            { id: "10", name: "Wild Orange", category: "Single", uses: "Diffuse to uplift atmosphere.", benefits: "Energizes the mind, uplifts mood, and cleanses surfaces." },
-            { id: "11", name: "Eucalyptus", category: "Single", uses: "Add to shower floor for a refreshing steam experience.", benefits: "Promotes easy breathing and clears airways." },
-            { id: "12", name: "Copaiba", category: "Single", uses: "Take under tongue or mix with moisturizer.", benefits: "Supports nervous system and calms anxious feelings." },
-            { id: "13", name: "Wintergreen", category: "Single", uses: "Massage diluted onto back and joints.", benefits: "Provides warming comfort and soothing relief to muscles." },
-            { id: "14", name: "Cedarwood", category: "Single", uses: "Diffuse during meditation.", benefits: "Promotes relaxing atmosphere and healthy skin tone." },
-            { id: "15", name: "Fennel", category: "Single", uses: "Take in water to curb sugar cravings.", benefits: "Supports healthy metabolism and digestion." },
-            { id: "16", name: "Vetiver", category: "Single", uses: "Apply to back of neck or diffuse.", benefits: "Calming, grounding aroma that helps soothe restlessness." },
-            { id: "17", name: "Lime", category: "Single", uses: "Diffuse to cleanse the air.", benefits: "Supports emotional balance and purifies air." },
-            { id: "18", name: "Tangerine", category: "Single", uses: "Add to water for flavor or diffuse.", benefits: "Uplifts mood and supports healthy immune function." },
-            { id: "19", name: "Ylang Ylang", category: "Single", uses: "Massage into hair for luster or diffuse.", benefits: "Lessen tension and supports healthy skin and hair radiance." },
-            { id: "20", name: "Juniper Berry", category: "Single", uses: "Diffuse for cleansing aroma.", benefits: "Acts as a natural skin toner and supports kidney health." },
-            { id: "21", name: "Spearmint", category: "Single", uses: "Diffuse for fresh breath or apply to toothbrush.", benefits: "Promotes digestion and helps reduce occasional stomach upset." },
-            { id: "22", name: "Helichrysum", category: "Single", uses: "Apply to face to reduce wrinkles.", benefits: "Rejuvenates skin and promotes a glowing complexion." },
-            { id: "23", name: "Coriander", category: "Single", uses: "Apply to oily skin areas.", benefits: "Promotes digestion and supports clear complexion." },
-            { id: "24", name: "Geranium", category: "Single", uses: "Use in steam facial.", benefits: "Promotes clear, healthy skin and healthy hair." },
-            { id: "25", name: "Petitgrain", category: "Single", uses: "Take internally to ease tension.", benefits: "Supports cardiovascular, immune, and nervous systems." },
-            { id: "26", name: "Patchouli", category: "Single", uses: "Apply to face to reduce blemishes.", benefits: "Grounding aroma and promotes smooth, glowing skin." },
-            { id: "27", name: "Bergamot", category: "Single", uses: "Diffuse in office to uplift mood.", benefits: "Calms and uplifts mood simultaneously." },
-            { id: "28", name: "Thyme", category: "Single", uses: "Take internally for immunity support.", benefits: "Provides powerful cleansing and purifying properties." },
-            { id: "29", name: "Marjoram", category: "Single", uses: "Apply to back of neck to lessen stress.", benefits: "Valued for its calming properties on the nervous system." },
-            { id: "30", name: "Rosemary", category: "Single", uses: "Massage into scalp.", benefits: "Supports mental focus and promotes abundant hair growth." },
-            { id: "31", name: "Myrrh", category: "Single", uses: "Add to toothpaste for oral health.", benefits: "Powerful cleansing properties, especially for mouth and throat." },
-            { id: "32", name: "Clove", category: "Single", uses: "Apply diluted to teeth/gums.", benefits: "Powerful antioxidant properties and supports oral hygiene." },
-            { id: "33", name: "Sandalwood", category: "Single", uses: "Apply to skin to reduce appearance of imperfections.", benefits: "Enhances skin health and grounds emotional well-being." },
-            { id: "34", name: "Siberian Fir", category: "Single", uses: "Apply topically to soothe skin.", benefits: "Calms anxious feelings and supports easy breathing." },
-            { id: "35", name: "Cinnamon Bark", category: "Single", uses: "Dilute heavily and apply for warming massage.", benefits: "Supports metabolic health and immune function." },
-            { id: "36", name: "Basil", category: "Single", uses: "Diffuse while studying or working.", benefits: "Promotes mental alertness and eases occasional tension." },
-            { id: "37", name: "Cypress", category: "Single", uses: "Apply to legs before workout.", benefits: "Promotes healthy circulation and vitality." },
-            { id: "38", name: "Grapefruit", category: "Single", uses: "Add to facial toner.", benefits: "Improves appearance of blemishes and energizes mood." },
-            { id: "39", name: "Ginger", category: "Single", uses: "Massage over lower abdomen.", benefits: "Supports overall digestive health and eases nausea." },
-            { id: "40", name: "Lemon Eucalyptus", category: "Single", uses: "Diffuse indoors for a fresh environment.", benefits: "Cleansing to the skin and purifying to the air." },
-            { id: "41", name: "Cassia", category: "Single", uses: "Diffuse during cold winter months.", benefits: "Promotes healthy digestion and immune function." },
-            { id: "42", name: "Citronella", category: "Single", uses: "Diffuse outdoors or apply to skin.", benefits: "Acts as a natural pest repellent and cleanses surfaces." },
-            { id: "43", name: "Celery Seed", category: "Single", uses: "Take in a veggie capsule.", benefits: "Supports healthy digestion and urinary tract." },
-            { id: "44", name: "Clary Sage", category: "Single", uses: "Apply to abdomen during menstrual cycle.", benefits: "Promotes healthy hormonal balance and restful sleep." },
-            { id: "45", name: "Green Mandarin", category: "Single", uses: "Take internally to support immunity.", benefits: "Supports healthy nervous, digestive, and respiratory systems." },
+            { name: "Tulsi (Holy Basil)", category: "Single", uses: "Diffuse or apply topically to wrists and back of neck.", benefits: "Promotes a calming atmosphere and healthy skin." },
+            { name: "Indian Lemongrass", category: "Single", uses: "Massage onto muscles post-workout or diffuse.", benefits: "Provides purifying aroma and supports healthy digestion." },
+            { name: "Turmeric", category: "Single", uses: "Take internally for cellular support or apply topically.", benefits: "Provides antioxidant support and promotes healthy immune response." },
+            { name: "Peppermint", category: "Single", uses: "Inhale directly for alertness or dilute on temples.", benefits: "Supports clear breathing and cools muscles." },
+            { name: "Lavender", category: "Single", uses: "Diffuse at night or apply topically to wrists.", benefits: "Promotes restful sleep and calms minor skin irritations." },
+            { name: "Lemon", category: "Single", uses: "Add to water or use for surface cleansing.", benefits: "Cleanses toxins naturally and purifies the air." },
+            { name: "Frankincense", category: "Single", uses: "Apply to bottoms of feet or diffuse during meditation.", benefits: "Supports cellular function and brings deep peace." },
+            { name: "Tea Tree", category: "Single", uses: "Apply directly to skin blemishes or add to shampoo.", benefits: "Renowned for cleansing properties on skin and scalp." },
+            { name: "Oregano", category: "Single", uses: "Dilute heavily for skin or take internally.", benefits: "Powerful cleansing agent and supports immune defenses." },
+            { name: "Wild Orange", category: "Single", uses: "Diffuse to uplift atmosphere.", benefits: "Energizes the mind, uplifts mood, and cleanses surfaces." },
+            { name: "Eucalyptus", category: "Single", uses: "Add to shower floor for a refreshing steam experience.", benefits: "Promotes easy breathing and clears airways." },
+            { name: "Copaiba", category: "Single", uses: "Take under tongue or mix with moisturizer.", benefits: "Supports nervous system and calms anxious feelings." },
+            { name: "Wintergreen", category: "Single", uses: "Massage diluted onto back and joints.", benefits: "Provides warming comfort and soothing relief to muscles." },
+            { name: "Cedarwood", category: "Single", uses: "Diffuse during meditation.", benefits: "Promotes relaxing atmosphere and healthy skin tone." },
+            { name: "Fennel", category: "Single", uses: "Take in water to curb sugar cravings.", benefits: "Supports healthy metabolism and digestion." },
+            { name: "Vetiver", category: "Single", uses: "Apply to back of neck or diffuse.", benefits: "Calming, grounding aroma that helps soothe restlessness." },
+            { name: "Lime", category: "Single", uses: "Diffuse to cleanse the air.", benefits: "Supports emotional balance and purifies air." },
+            { name: "Tangerine", category: "Single", uses: "Add to water for flavor or diffuse.", benefits: "Uplifts mood and supports healthy immune function." },
+            { name: "Ylang Ylang", category: "Single", uses: "Massage into hair for luster or diffuse.", benefits: "Lessen tension and supports healthy skin and hair radiance." },
+            { name: "Juniper Berry", category: "Single", uses: "Diffuse for cleansing aroma.", benefits: "Acts as a natural skin toner and supports kidney health." },
+            { name: "Spearmint", category: "Single", uses: "Diffuse for fresh breath or apply to toothbrush.", benefits: "Promotes digestion and helps reduce occasional stomach upset." },
+            { name: "Helichrysum", category: "Single", uses: "Apply to face to reduce wrinkles.", benefits: "Rejuvenates skin and promotes a glowing complexion." },
+            { name: "Coriander", category: "Single", uses: "Apply to oily skin areas.", benefits: "Promotes digestion and supports clear complexion." },
+            { name: "Geranium", category: "Single", uses: "Use in steam facial.", benefits: "Promotes clear, healthy skin and healthy hair." },
+            { name: "Petitgrain", category: "Single", uses: "Take internally to ease tension.", benefits: "Supports cardiovascular, immune, and nervous systems." },
+            { name: "Patchouli", category: "Single", uses: "Apply to face to reduce blemishes.", benefits: "Grounding aroma and promotes smooth, glowing skin." },
+            { name: "Bergamot", category: "Single", uses: "Diffuse in office to uplift mood.", benefits: "Calms and uplifts mood simultaneously." },
+            { name: "Thyme", category: "Single", uses: "Take internally for immunity support.", benefits: "Provides powerful cleansing and purifying properties." },
+            { name: "Marjoram", category: "Single", uses: "Apply to back of neck to lessen stress.", benefits: "Valued for its calming properties on the nervous system." },
+            { name: "Rosemary", category: "Single", uses: "Massage into scalp.", benefits: "Supports mental focus and promotes abundant hair growth." },
+            { name: "Myrrh", category: "Single", uses: "Add to toothpaste for oral health.", benefits: "Powerful cleansing properties, especially for mouth and throat." },
+            { name: "Clove", category: "Single", uses: "Apply diluted to teeth/gums.", benefits: "Powerful antioxidant properties and supports oral hygiene." },
+            { name: "Sandalwood", category: "Single", uses: "Apply to skin to reduce appearance of imperfections.", benefits: "Enhances skin health and grounds emotional well-being." },
+            { name: "Siberian Fir", category: "Single", uses: "Apply topically to soothe skin.", benefits: "Calms anxious feelings and supports easy breathing." },
+            { name: "Cinnamon Bark", category: "Single", uses: "Dilute heavily and apply for warming massage.", benefits: "Supports metabolic health and immune function." },
+            { name: "Basil", category: "Single", uses: "Diffuse while studying or working.", benefits: "Promotes mental alertness and eases occasional tension." },
+            { name: "Cypress", category: "Single", uses: "Apply to legs before workout.", benefits: "Promotes healthy circulation and vitality." },
+            { name: "Grapefruit", category: "Single", uses: "Add to facial toner.", benefits: "Improves appearance of blemishes and energizes mood." },
+            { name: "Ginger", category: "Single", uses: "Massage over lower abdomen.", benefits: "Supports overall digestive health and eases nausea." },
+            { name: "Lemon Eucalyptus", category: "Single", uses: "Diffuse indoors for a fresh environment.", benefits: "Cleansing to the skin and purifying to the air." },
+            { name: "Cassia", category: "Single", uses: "Diffuse during cold winter months.", benefits: "Promotes healthy digestion and immune function." },
+            { name: "Citronella", category: "Single", uses: "Diffuse outdoors or apply to skin.", benefits: "Acts as a natural pest repellent and cleanses surfaces." },
+            { name: "Celery Seed", category: "Single", uses: "Take in a veggie capsule.", benefits: "Supports healthy digestion and urinary tract." },
+            { name: "Clary Sage", category: "Single", uses: "Apply to abdomen during menstrual cycle.", benefits: "Promotes healthy hormonal balance and restful sleep." },
+            { name: "Green Mandarin", category: "Single", uses: "Take internally to support immunity.", benefits: "Supports healthy nervous, digestive, and respiratory systems." },
             
             // Blends
-            { id: "46", name: "On Guard", category: "Blend", uses: "Diffuse to cleanse air or apply to soles of feet.", benefits: "Supports healthy immune function against environmental threats." },
-            { id: "47", name: "Air Repair (Breathe)", category: "Blend", uses: "Apply topically to chest or diffuse at night.", benefits: "Maintains clear airways and minimizes effects of seasonal threats." },
-            { id: "48", name: "Deep Blue", category: "Blend", uses: "Massage topically onto hands, lower back, and joints.", benefits: "Provides immediate cooling and soothing relief to sore muscles." },
-            { id: "49", name: "DigestZen", category: "Blend", uses: "Massage onto abdomen or take in water.", benefits: "Aids in smooth digestion and eases stomach upset." },
-            { id: "50", name: "Balance", category: "Blend", uses: "Apply to wrists or back of neck during workdays.", benefits: "Creates a sense of calmness, grounding, and emotional equilibrium." },
-            { id: "51", name: "Serenity", category: "Blend", uses: "Diffuse at bedtime to encourage tranquility.", benefits: "Lessens tension, calms emotions, and supports restful sleep." },
-            { id: "52", name: "Citrus Bliss", category: "Blend", uses: "Diffuse for a refreshing aroma.", benefits: "Reduces stress, uplifts mood, and cleanses skin." },
-            { id: "53", name: "Elevation", category: "Blend", uses: "Diffuse to elevate mood or apply to pulse points.", benefits: "Elevates mood, promotes high spirits, and increases vitality." },
-            { id: "54", name: "PastTense", category: "Blend", uses: "Roll on temples, neck, and shoulders.", benefits: "Quickly eases head and neck tension, providing relaxation." },
-            { id: "55", name: "Purify", category: "Blend", uses: "Diffuse to eliminate odors or add to laundry.", benefits: "Refreshes air and protects against environmental odors." },
-            { id: "56", name: "AromaTouch", category: "Blend", uses: "Use in massage for a spa-like experience.", benefits: "Comforting and relaxing effects on muscles and joints." },
-            { id: "57", name: "ClaryCalm", category: "Blend", uses: "Roll on abdomen for a cooling massage.", benefits: "Provides a soothing and calming effect during a woman’s menstrual cycle." },
-            { id: "58", name: "InTune", category: "Blend", uses: "Apply to temples and back of neck when studying.", benefits: "Enhances and sustains a sense of focus." },
-            { id: "59", name: "Adaptiv", category: "Blend", uses: "Apply to pulse points to center yourself.", benefits: "Helps improve sustained attention while easing body and mind." },
-            { id: "60", name: "Cheer", category: "Blend", uses: "Apply to heart or wrists for a boost.", benefits: "Provides a cheerful, uplifting aroma to brighten your day." },
-            { id: "61", name: "Console", category: "Blend", uses: "Diffuse during times of loss or grief.", benefits: "Promotes comforting emotional moments and hope." },
-            { id: "62", name: "Forgive", category: "Blend", uses: "Apply to heart during reflection time.", benefits: "Helps discover the liberating action of forgiving." },
-            { id: "63", name: "Motivate", category: "Blend", uses: "Diffuse when working on a project.", benefits: "Unleashes creative powers and counters negative emotions." },
-            { id: "64", name: "Passion", category: "Blend", uses: "Apply to pulse points throughout the day.", benefits: "Ignites feelings of excitement, passion, and joy." },
-            { id: "65", name: "Peace", category: "Blend", uses: "Diffuse at night or rub on tense shoulders.", benefits: "Promotes feelings of peace, reassurance, and contentment." },
-            { id: "66", name: "HD Clear", category: "Blend", uses: "Apply to smooth out skin imperfections.", benefits: "Promotes a clear, smooth complexion." },
-            { id: "67", name: "Immortelle", category: "Blend", uses: "Apply a thin layer to face and neck.", benefits: "Helps reduce the appearance of fine lines and wrinkles." },
-            { id: "68", name: "TerraShield", category: "Blend", uses: "Apply to legs, arms, and neck outdoors.", benefits: "Acts as an effective, natural outdoor barrier." },
-            { id: "69", name: "Zendocrine", category: "Blend", uses: "Take in water to kick-start a cleanse.", benefits: "Supports the body’s natural ability to rid itself of unwanted substances." },
+            { name: "On Guard", category: "Blend", uses: "Diffuse to cleanse air or apply to soles of feet.", benefits: "Supports healthy immune function against environmental threats." },
+            { name: "Air Repair (Breathe)", category: "Blend", uses: "Apply topically to chest or diffuse at night.", benefits: "Maintains clear airways and minimizes effects of seasonal threats." },
+            { name: "Deep Blue", category: "Blend", uses: "Massage topically onto hands, lower back, and joints.", benefits: "Provides immediate cooling and soothing relief to sore muscles." },
+            { name: "DigestZen", category: "Blend", uses: "Massage onto abdomen or take in water.", benefits: "Aids in smooth digestion and eases stomach upset." },
+            { name: "Balance", category: "Blend", uses: "Apply to wrists or back of neck during workdays.", benefits: "Creates a sense of calmness, grounding, and emotional equilibrium." },
+            { name: "Serenity", category: "Blend", uses: "Diffuse at bedtime to encourage tranquility.", benefits: "Lessens tension, calms emotions, and supports restful sleep." },
+            { name: "Citrus Bliss", category: "Blend", uses: "Diffuse for a refreshing aroma.", benefits: "Reduces stress, uplifts mood, and cleanses skin." },
+            { name: "Elevation", category: "Blend", uses: "Diffuse to elevate mood or apply to pulse points.", benefits: "Elevates mood, promotes high spirits, and increases vitality." },
+            { name: "PastTense", category: "Blend", uses: "Roll on temples, neck, and shoulders.", benefits: "Quickly eases head and neck tension, providing relaxation." },
+            { name: "Purify", category: "Blend", uses: "Diffuse to eliminate odors or add to laundry.", benefits: "Refreshes air and protects against environmental odors." },
+            { name: "AromaTouch", category: "Blend", uses: "Use in massage for a spa-like experience.", benefits: "Comforting and relaxing effects on muscles and joints." },
+            { name: "ClaryCalm", category: "Blend", uses: "Roll on abdomen for a cooling massage.", benefits: "Provides a soothing and calming effect during a woman’s menstrual cycle." },
+            { name: "InTune", category: "Blend", uses: "Apply to temples and back of neck when studying.", benefits: "Enhances and sustains a sense of focus." },
+            { name: "Adaptiv", category: "Blend", uses: "Apply to pulse points to center yourself.", benefits: "Helps improve sustained attention while easing body and mind." },
+            { name: "Cheer", category: "Blend", uses: "Apply to heart or wrists for a boost.", benefits: "Provides a cheerful, uplifting aroma to brighten your day." },
+            { name: "Console", category: "Blend", uses: "Diffuse during times of loss or grief.", benefits: "Promotes comforting emotional moments and hope." },
+            { name: "Forgive", category: "Blend", uses: "Apply to heart during reflection time.", benefits: "Helps discover the liberating action of forgiving." },
+            { name: "Motivate", category: "Blend", uses: "Diffuse when working on a project.", benefits: "Unleashes creative powers and counters negative emotions." },
+            { name: "Passion", category: "Blend", uses: "Apply to pulse points throughout the day.", benefits: "Ignites feelings of excitement, passion, and joy." },
+            { name: "Peace", category: "Blend", uses: "Diffuse at night or rub on tense shoulders.", benefits: "Promotes feelings of peace, reassurance, and contentment." },
+            { name: "HD Clear", category: "Blend", uses: "Apply to smooth out skin imperfections.", benefits: "Promotes a clear, smooth complexion." },
+            { name: "Immortelle", category: "Blend", uses: "Apply a thin layer to face and neck.", benefits: "Helps reduce the appearance of fine lines and wrinkles." },
+            { name: "TerraShield", category: "Blend", uses: "Apply to legs, arms, and neck outdoors.", benefits: "Acts as an effective, natural outdoor barrier." },
+            { name: "Zendocrine", category: "Blend", uses: "Take in water to kick-start a cleanse.", benefits: "Supports the body’s natural ability to rid itself of unwanted substances." },
 
             // Wellness & Spa
-            { id: "70", name: "VMG+", category: "Wellness", uses: "Use daily as a dietary supplement.", benefits: "Fills nutritional gaps to support overall wellness in Indian lifestyles." },
-            { id: "71", name: "Deep Blue Rub", category: "Wellness", uses: "Rub directly onto targeted muscle areas.", benefits: "Delivers targeted cooling and warming comfort to muscles." },
-            { id: "72", name: "PB Assist+", category: "Wellness", uses: "Take one capsule daily with food.", benefits: "Supports healthy digestive tract microbiome and immunity." },
-            { id: "73", name: "TerraZyme", category: "Wellness", uses: "Take 1-3 capsules with meals.", benefits: "Supports enzyme production and nutrient uptake." },
-            { id: "74", name: "Correct-X", category: "Wellness", uses: "Apply to affected skin areas.", benefits: "Multi-purpose natural ointment that soothes distressed skin." },
-            { id: "75", name: "On Guard Toothpaste", category: "Wellness", uses: "Brush teeth morning and night.", benefits: "Cleans teeth naturally and leaves breath cinnamon-fresh." }
+            { name: "VMG+", category: "Wellness", uses: "Use daily as a dietary supplement.", benefits: "Fills nutritional gaps to support overall wellness in Indian lifestyles." },
+            { name: "Deep Blue Rub", category: "Wellness", uses: "Rub directly onto targeted muscle areas.", benefits: "Delivers targeted cooling and warming comfort to muscles." },
+            { name: "PB Assist+", category: "Wellness", uses: "Take one capsule daily with food.", benefits: "Supports healthy digestive tract microbiome and immunity." },
+            { name: "TerraZyme", category: "Wellness", uses: "Take 1-3 capsules with meals.", benefits: "Supports enzyme production and nutrient uptake." },
+            { name: "Correct-X", category: "Wellness", uses: "Apply to affected skin areas.", benefits: "Multi-purpose natural ointment that soothes distressed skin." },
+            { name: "On Guard Toothpaste", category: "Wellness", uses: "Brush teeth morning and night.", benefits: "Cleans teeth naturally and leaves breath cinnamon-fresh." }
         ];
 
         let productsData = [];
         let isAdminLoggedIn = false;
 
-        // SMART REAL-TIME SYNC (Uses Firestore if available, otherwise seamlessly falls back to local data)
         db.collection("doterra_products").onSnapshot((querySnapshot) => {
             let cloudData = [];
             querySnapshot.forEach((doc) => {
@@ -270,7 +271,6 @@
                 cloudData.push(data);
             });
 
-            // Agar cloud database mein data hai toh wo use karo, nahi toh fallback list dikhao
             if (cloudData.length > 0) {
                 productsData = cloudData;
             } else {
@@ -280,8 +280,6 @@
             document.getElementById('loader').style.display = 'none';
             renderProducts();
         }, (error) => {
-            // Agar offline ya permission issue ho toh fallback products turant dikha do
-            console.log("Using local fallback products due to network/permission");
             productsData = fallbackProducts;
             document.getElementById('loader').style.display = 'none';
             renderProducts();
@@ -322,20 +320,32 @@
             });
         }
 
-        function openAdminLogin() {
-            if (isAdminLoggedIn) { alert("Admin is Active."); } 
-            else { document.getElementById('loginModal').style.display = 'flex'; }
+        // Push all fallback items to cloud database permanently
+        function pushAllToCloud() {
+            if(!confirm("Kya aap saare 75 products ko cloud database mein permanent save karna chahte hain?")) return;
+            let batchCount = 0;
+            fallbackProducts.forEach((prod, index) => {
+                setTimeout(() => {
+                    db.collection("doterra_products").add(prod).then(() => {
+                        batchCount++;
+                        if(batchCount === fallbackProducts.length) {
+                            alert("Saare products successfully database mein save ho gaye hain! Ab aap aaram se edit kar sakte hain.");
+                        }
+                    });
+                }, index * 100);
+            });
         }
 
-        function verifyLogin() {
-            let pass = document.getElementById('adminPassword').value;
+        function openAdminLogin() {
+            let pass = prompt("Enter Admin Password:");
             if (pass === "Unisoasi@1980") {
                 isAdminLoggedIn = true;
-                closeModals();
                 document.querySelector('.admin-btn').innerText = "Admin (Active)";
                 document.getElementById('addBtn').style.display = 'inline-block';
+                document.getElementById('pushBtn').style.display = 'inline-block';
                 renderProducts(); 
-            } else {
+                alert("Admin Logged In Successfully!");
+            } else if(pass !== null) {
                 alert("Incorrect Password!");
             }
         }
@@ -381,21 +391,24 @@
                 img: image || ""
             };
 
-            // Agar fallback item hai (jiska id number hai), toh use cloud par naya add karenge
-            if(id && isNaN(id)) {
-                db.collection("doterra_products").doc(id).update(productData);
+            if(id) {
+                db.collection("doterra_products").doc(id).update(productData).then(() => {
+                    alert("Product updated & synced successfully!");
+                });
             } else {
-                db.collection("doterra_products").add(productData);
+                db.collection("doterra_products").add(productData).then(() => {
+                    alert("New product added & synced successfully!");
+                });
             }
             closeModals();
         }
 
         function deleteProduct(id) {
-            if(!isNaN(id)) {
-                alert("Default fallback items cannot be deleted directly. You can edit them or add new ones!");
-                return;
+            if(confirm("Are you sure you want to delete this product?")) {
+                db.collection("doterra_products").doc(id).delete().then(() => {
+                    alert("Product deleted successfully!");
+                });
             }
-            db.collection("doterra_products").doc(id).delete();
         }
 
         function closeModals() {
